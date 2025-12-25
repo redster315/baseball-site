@@ -51,17 +51,20 @@
             let htmlContent = "";
 
             // 1行目（見出し）を飛ばして2行目からループ
-            for (let i = 1; i < rows.length; i++) {
+                        for (let i = 1; i < rows.length; i++) {
                 const columns = rows[i].split(',');
-                // 少なくとも2つ以上のデータ（日付と内容）がある場合のみ表示
                 if (columns.length >= 2) {
+                    // 2項目目（戸郷）以降のデータをすべて「 / 」でつなぎ合わせる魔法
+                    const allContent = columns.slice(1).join(' / ').replace(/"/g, "");
+                    
                     htmlContent += `
                         <div class="card">
                             <strong>日付：${columns[0].replace(/"/g, "")}</strong><br>
-                            内容：${columns[1].replace(/"/g, "")}
+                            内容：${allContent}
                         </div>`;
                 }
             }
+
 
             document.getElementById('data-list').innerHTML = htmlContent || "表示できるデータがありません。";
 
