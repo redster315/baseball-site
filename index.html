@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロ野球応援サイト</title>
+    <style>
+        /* ここにCSS（デザイン） */
+        body { font-family: sans-serif; margin: 0; background: #f0f0f0; }
+        .navbar { background: #222; display: flex; justify-content: center; padding: 10px; position: sticky; top: 0; }
+        .navbar button { background: none; border: none; color: white; padding: 10px 20px; cursor: pointer; font-size: 1rem; }
+        .page-content { display: none; padding: 20px; text-align: center; }
+        .active { display: block; }
+        .card { background: white; padding: 20px; border-radius: 10px; margin: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <button onclick="showPage('home')">ホーム</button>
+    <button onclick="showPage('players')">選手紹介</button>
+    <button onclick="showPage('results')">試合結果</button>
+</nav>
+
+<div id="home" class="page-content active">
+    <h1>プロ野球ファンサイト</h1>
+    <p>iPadで作成した初めてのサイトです！</p>
+</div>
+
+<div id="players" class="page-content">
+    <h1>選手名鑑</h1>
+    <div class="card">ここに好きな選手を書いていきましょう</div>
+</div>
+
+<div id="results" class="page-content">
+    <h1>試合結果</h1>
+    <div class="card">最新のスコアをここに！</div>
+</div>
+
+<script>
+    /* ここにJavaScript（動き） */
+    function showPage(pageId) {
+        const pages = document.querySelectorAll('.page-content');
+        pages.forEach(page => { page.classList.remove('active'); });
+        document.getElementById(pageId).classList.add('active');
+    }
+</script>
+
+</body>
+</html>
