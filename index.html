@@ -11,7 +11,12 @@
         .page-content { display: none; padding: 10px; text-align: center; }
         .active { display: block; }
         .card { background: white; padding: 12px; border-radius: 8px; margin: 10px auto; max-width: 95%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #005aad; }
-        .date-label { font-size: 0.9rem; color: #666; margin-bottom: 10px; text-align: center; font-weight: bold; }
+        
+        /* 曜日によって色を変えるための設定 */
+        .date-label { font-size: 1rem; color: #333; margin-bottom: 10px; text-align: center; font-weight: bold; }
+        .sun { color: #ff0000; } /* 日曜は赤 */
+        .sat { color: #0000ff; } /* 土曜は青 */
+
         .lineup-container { display: flex; justify-content: space-between; gap: 5px; position: relative; }
         .team-box { flex: 1; text-align: left; min-width: 0; }
         .team-name { font-weight: bold; border-bottom: 2px solid #eee; margin-bottom: 5px; padding-bottom: 3px; font-size: 0.8rem; color: #444; }
@@ -51,17 +56,23 @@
             const csvRows = csvData.trim().split(/\r?\n/);
             let htmlContent = "";
 
+            const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
+
             for (let i = 1; i < csvRows.length; i++) {
                 const firstCommaIndex = csvRows[i].indexOf(',');
                 if (firstCommaIndex === -1) continue;
 
-                const date = csvRows[i].substring(0, firstCommaIndex).replace(/"/g, "").trim();
+                const dateStr = csvRows[i].substring(0, firstCommaIndex).replace(/"/g, "").trim();
                 let bColumn = csvRows[i].substring(firstCommaIndex + 1).trim();
                 
-                // B列が「無し」の場合はスキップ（表示しない）
-                if (bColumn.includes("無し") || bColumn === "") {
-                    continue;
-                }
+                if (bColumn.includes("無し") || bColumn === "") continue;
+
+                // 曜日の計算
+                const dateObj = new Date(dateStr);
+                const dayOfWeek = dayNames[dateObj.getDay()];
+                let dayClass = "";
+                if (dateObj.getDay() === 0) dayClass = "sun";
+                if (dateObj.getDay() === 6) dayClass = "sat";
 
                 if (bColumn.startsWith('"') && bColumn.endsWith('"')) {
                     bColumn = bColumn.substring(1, bColumn.length - 1);
@@ -69,7 +80,6 @@
                 
                 const lineData = bColumn.split(',').map(item => item.trim());
 
-                // データ数が少なくても、少なくともホーム先発がいれば表示を試みるように修正
                 if (lineData.length >= 1) {
                     let homeLineup = "";
                     for (let j = 1; j <= 9; j++) {
@@ -88,7 +98,7 @@
 
                     htmlContent += `
                         <div class="card">
-                            <div class="date-label">${date}</div>
+                            <div class="date-label ${dayClass}">${dateStr} (${dayOfWeek})</div>
                             <div class="lineup-container">
                                 <div class="vs-center">VS</div>
                                 <div class="team-box">
