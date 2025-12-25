@@ -11,10 +11,7 @@
         .page-content { display: none; padding: 10px; text-align: center; }
         .active { display: block; }
         .card { background: white; padding: 12px; border-radius: 8px; margin: 10px auto; max-width: 95%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #005aad; }
-        
-        /* 曜日の色分けを廃止し、黒色に統一 */
         .date-label { font-size: 1rem; color: #333; margin-bottom: 10px; text-align: center; font-weight: bold; }
-
         .lineup-container { display: flex; justify-content: space-between; gap: 5px; position: relative; }
         .team-box { flex: 1; text-align: left; min-width: 0; }
         .team-name { font-weight: bold; border-bottom: 2px solid #eee; margin-bottom: 5px; padding-bottom: 3px; font-size: 0.8rem; color: #444; }
@@ -45,6 +42,24 @@
 <script>
     window.onload = loadBaseballData;
 
+    // 投手名からチーム名を判定する辞書
+    const teamMates = {
+        "巨人": ["戸郷", "山﨑伊", "菅野", "伊織", "グリフィン", "赤星", "井上"],
+        "ヤクルト": ["奥川", "吉村", "高橋", "サイスニード", "小川", "ヤフーレ"],
+        "中日": ["高橋宏", "柳", "小笠原", "メヒア", "大野", "湧井"],
+        "広島": ["九里", "大瀬良", "森下", "床田", "アドゥワ", "ハッチ"]
+    };
+
+    function getTeamName(pitcherName) {
+        if (!pitcherName || pitcherName === "未定") return "チーム";
+        for (const team in teamMates) {
+            if (teamMates[team].some(name => pitcherName.includes(name))) {
+                return team;
+            }
+        }
+        return "チーム";
+    }
+
     async function loadBaseballData() {
         const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRcPAYbDgrEgCq24g-rkfqk3b3c0v33RpyI-Fv0CaAnShvryaNOknS6l2TNxEec23u1rH1tJSeRD2hu/pub?output=csv";
         
@@ -53,7 +68,6 @@
             const csvData = await response.text();
             const csvRows = csvData.trim().split(/\r?\n/);
             let htmlContent = "";
-
             const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
 
             for (let i = 1; i < csvRows.length; i++) {
@@ -63,10 +77,8 @@
                 const dateStr = csvRows[i].substring(0, firstCommaIndex).replace(/"/g, "").trim();
                 let bColumn = csvRows[i].substring(firstCommaIndex + 1).trim();
                 
-                // 「無し」が含まれる場合は表示をスキップ
                 if (bColumn.includes("無し") || bColumn === "") continue;
 
-                // 曜日の計算
                 const dateObj = new Date(dateStr);
                 const dayOfWeek = dayNames[dateObj.getDay()];
 
@@ -77,20 +89,22 @@
                 const lineData = bColumn.split(',').map(item => item.trim());
 
                 if (lineData.length >= 1) {
+                    const p1 = lineData[0] || '未定';
+                    const p2 = lineData[10] || '未定';
+                    
+                    // チーム名の取得
+                    const homeTeam = getTeamName(p1);
+                    const awayTeam = getTeamName(p2);
+
                     let homeLineup = "";
                     for (let j = 1; j <= 9; j++) {
-                        const player = lineData[j] || "";
-                        homeLineup += `<li class="lineup-item"><span class="order-num">${j}</span>${player}</li>`;
+                        homeLineup += `<li class="lineup-item"><span class="order-num">${j}</span>${lineData[j] || ""}</li>`;
                     }
 
                     let awayLineup = "";
                     for (let j = 11; j <= 19; j++) {
-                        const player = lineData[j] || "";
-                        awayLineup += `<li class="lineup-item"><span class="order-num">${j-10}</span>${player}</li>`;
+                        awayLineup += `<li class="lineup-item"><span class="order-num">${j-10}</span>${lineData[j] || ""}</li>`;
                     }
-
-                    const p1 = lineData[0] || '未定';
-                    const p2 = lineData[10] || '未定';
 
                     htmlContent += `
                         <div class="card">
@@ -98,12 +112,12 @@
                             <div class="lineup-container">
                                 <div class="vs-center">VS</div>
                                 <div class="team-box">
-                                    <div class="team-name">ホーム</div>
+                                    <div class="team-name">ホーム：${homeTeam}</div>
                                     <div class="pitcher-info">先発:${p1}</div>
                                     <ul class="lineup-list">${homeLineup}</ul>
                                 </div>
                                 <div class="team-box" style="text-align: right;">
-                                    <div class="team-name" style="text-align: right;">ビジター</div>
+                                    <div class="team-name" style="text-align: right;">ビジター：${awayTeam}</div>
                                     <div class="pitcher-info">先発:${p2}</div>
                                     <ul class="lineup-list">${awayLineup}</ul>
                                 </div>
