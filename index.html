@@ -12,10 +12,8 @@
         .active { display: block; }
         .card { background: white; padding: 12px; border-radius: 8px; margin: 10px auto; max-width: 95%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #005aad; }
         
-        /* 曜日によって色を変えるための設定 */
+        /* 曜日の色分けを廃止し、黒色に統一 */
         .date-label { font-size: 1rem; color: #333; margin-bottom: 10px; text-align: center; font-weight: bold; }
-        .sun { color: #ff0000; } /* 日曜は赤 */
-        .sat { color: #0000ff; } /* 土曜は青 */
 
         .lineup-container { display: flex; justify-content: space-between; gap: 5px; position: relative; }
         .team-box { flex: 1; text-align: left; min-width: 0; }
@@ -65,14 +63,12 @@
                 const dateStr = csvRows[i].substring(0, firstCommaIndex).replace(/"/g, "").trim();
                 let bColumn = csvRows[i].substring(firstCommaIndex + 1).trim();
                 
+                // 「無し」が含まれる場合は表示をスキップ
                 if (bColumn.includes("無し") || bColumn === "") continue;
 
                 // 曜日の計算
                 const dateObj = new Date(dateStr);
                 const dayOfWeek = dayNames[dateObj.getDay()];
-                let dayClass = "";
-                if (dateObj.getDay() === 0) dayClass = "sun";
-                if (dateObj.getDay() === 6) dayClass = "sat";
 
                 if (bColumn.startsWith('"') && bColumn.endsWith('"')) {
                     bColumn = bColumn.substring(1, bColumn.length - 1);
@@ -98,7 +94,7 @@
 
                     htmlContent += `
                         <div class="card">
-                            <div class="date-label ${dayClass}">${dateStr} (${dayOfWeek})</div>
+                            <div class="date-label">${dateStr} (${dayOfWeek})</div>
                             <div class="lineup-container">
                                 <div class="vs-center">VS</div>
                                 <div class="team-box">
