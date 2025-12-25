@@ -13,16 +13,19 @@
         .card { background: white; padding: 12px; border-radius: 8px; margin: 10px auto; max-width: 95%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #005aad; }
         .date-label { font-size: 0.9rem; color: #666; margin-bottom: 10px; text-align: center; font-weight: bold; }
         
-        /* 左右に並べる設定（スマホでも崩れにくいように調整） */
-        .lineup-container { display: flex; justify-content: space-between; gap: 5px; }
-        .team-box { flex: 1; text-align: left; min-width: 0; } /* min-widthで文字溢れ防止 */
+        .lineup-container { display: flex; justify-content: space-between; gap: 5px; position: relative; }
+        .team-box { flex: 1; text-align: left; min-width: 0; }
         .team-name { font-weight: bold; border-bottom: 2px solid #eee; margin-bottom: 5px; padding-bottom: 3px; font-size: 0.8rem; color: #444; }
-        .pitcher-info { font-size: 0.9rem; font-weight: bold; margin-bottom: 8px; color: #d32f2f; min-height: 1.2em; }
+        
+        /* 先発投手のスタイル（黒色に変更） */
+        .pitcher-info { font-size: 0.9rem; font-weight: bold; margin-bottom: 8px; color: #000; min-height: 1.2em; }
+        
+        /* VSのスタイル（赤色・中央配置） */
+        .vs-center { position: absolute; left: 50%; top: 35px; transform: translateX(-50%); font-weight: bold; color: #ff0000; font-size: 0.8rem; z-index: 10; }
         
         .lineup-list { list-style: none; padding: 0; margin: 0; }
         .lineup-item { padding: 4px 0; border-bottom: 1px dashed #eee; display: flex; font-size: 0.8rem; white-space: nowrap; overflow: hidden; }
         .order-num { width: 18px; font-weight: bold; color: #005aad; flex-shrink: 0; }
-        .vs-divider { display: flex; align-items: center; font-weight: bold; color: #bbb; padding: 0 2px; font-size: 0.7rem; }
     </style>
 </head>
 <body>
@@ -54,24 +57,20 @@
             const rows = csvData.trim().split(/\r?\n/);
             let htmlContent = "";
 
-            // 日付順（上から下）に表示
             for (let i = 1; i < rows.length; i++) {
                 const col = rows[i].split(',').map(c => c.replace(/"/g, "").trim());
                 if (col.length >= 1 && col[0] !== "") {
                     
-                    // 自チーム (C列〜K列 / インデックス2〜10)
                     let homeLineup = "";
                     for (let j = 2; j <= 10; j++) {
                         if (col[j]) homeLineup += `<li class="lineup-item"><span class="order-num">${j-1}</span>${col[j]}</li>`;
                     }
 
-                    // 相手チーム (M列〜U列 / インデックス12〜20)
                     let awayLineup = "";
                     for (let j = 12; j <= 20; j++) {
                         if (col[j]) awayLineup += `<li class="lineup-item"><span class="order-num">${j-11}</span>${col[j]}</li>`;
                     }
 
-                    // 先発投手 (B列 vs L列)
                     const p1 = col[1] || '未定';
                     const p2 = col[11] || '未定';
 
@@ -79,14 +78,15 @@
                         <div class="card">
                             <div class="date-label">${col[0]}</div>
                             <div class="lineup-container">
+                                <div class="vs-center">VS</div>
+                                
                                 <div class="team-box">
-                                    <div class="team-name">自チーム</div>
+                                    <div class="team-name">ホーム</div>
                                     <div class="pitcher-info">先発:${p1}</div>
                                     <ul class="lineup-list">${homeLineup}</ul>
                                 </div>
-                                <div class="vs-divider">VS</div>
-                                <div class="team-box">
-                                    <div class="team-name">相手チーム</div>
+                                <div class="team-box" style="text-align: right;">
+                                    <div class="team-name" style="text-align: right;">ビジター</div>
                                     <div class="pitcher-info">先発:${p2}</div>
                                     <ul class="lineup-list">${awayLineup}</ul>
                                 </div>
@@ -108,4 +108,3 @@
 
 </body>
 </html>
-
