@@ -1,43 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロ野球データサイト</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #f0f0f0; color: #333; }
+        .navbar { background: #222; display: flex; justify-content: center; padding: 10px; position: sticky; top: 0; z-index: 1000; }
+        .navbar button { background: none; border: none; color: white; padding: 10px 20px; cursor: pointer; font-size: 1rem; }
+        .page-content { display: none; padding: 20px; text-align: center; }
+        .active { display: block; }
+        .card { background: white; padding: 15px; border-radius: 8px; margin: 10px auto; max-width: 400px; text-align: left; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #007bff; }
+        h1 { color: #222; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <button onclick="showPage('home')">ホーム</button>
+    <button onclick="showPage('results')">試合結果</button>
+</nav>
+
+<div id="home" class="page-content active">
+    <h1>野球データサイトへようこそ</h1>
+    <p>スプレッドシートを更新すると、ここも自動で変わります。</p>
+</div>
+
+<div id="results" class="page-content">
+    <h1>最新の試合結果</h1>
+    <div id="data-list"><p>読み込み中...</p></div>
+</div>
+
 <script>
-    window.onload = loadBaseballData;
+    // ページが開いた時にデータを読み込む
+    window.onload = function() {
+        loadBaseballData();
+    };
 
     async function loadBaseballData() {
+        // あなたのスプレッドシートCSV用URL
         const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRcPAYbDgrEgCq24g-rkfqk3b3c0v33RpyI-Fv0CaAnShvryaNOknS6l2TNxEec23u1rH1tJSeRD2hu/pub?output=csv";
         
         try {
             const response = await fetch(url);
-            const csvData = await response.text();
+            if (!response.ok) throw new Error('ネットワークエラー');
             
-            // 改行でバラバラにする際、余計な空白を消す処理を追加
-            const rows = csvData.trim().split('\n');
+            const csvData = await response.text();
+            // データを1行ずつに分け、前後の空白を削除
+            const rows = csvData.trim().split(/\r?\n/);
             let htmlContent = "";
 
-            // 1行目は見出しなので i = 1 から開始
+            // 1行目（見出し）を飛ばして2行目からループ
             for (let i = 1; i < rows.length; i++) {
                 const columns = rows[i].split(',');
+                // 少なくとも2つ以上のデータ（日付と内容）がある場合のみ表示
                 if (columns.length >= 2) {
                     htmlContent += `
                         <div class="card">
-                            <strong>日付：${columns[0].trim()}</strong><br>
-                            内容：${columns[1].trim()}
+                            <strong>日付：${columns[0].replace(/"/g, "")}</strong><br>
+                            内容：${columns[1].replace(/"/g, "")}
                         </div>`;
                 }
             }
 
-            if (htmlContent === "") {
-                document.getElementById('data-list').innerHTML = "表示できるデータがありませんでした。";
-            } else {
-                document.getElementById('data-list').innerHTML = htmlContent;
-            }
+            document.getElementById('data-list').innerHTML = htmlContent || "表示できるデータがありません。";
 
         } catch (e) {
             console.error(e);
-            document.getElementById('data-list').innerHTML = "エラー：読み込みに失敗しました。";
+            document.getElementById('data-list').innerHTML = "エラー：データの取得に失敗しました。";
         }
     }
 
+    // 画面切り替えの命令
     function showPage(pageId) {
-        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
+        const pages = document.querySelectorAll('.page-content');
+        pages.forEach(p => p.classList.remove('active'));
+        const target = document.getElementById(pageId);
+        if (target) target.classList.add('active');
     }
 </script>
+
+</body>
+</html>
