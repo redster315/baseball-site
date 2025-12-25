@@ -52,33 +52,39 @@
             let htmlContent = "";
 
             for (let i = 1; i < csvRows.length; i++) {
-                // A列（日付）とB列（データ全体）を正しく分ける処理
                 const firstCommaIndex = csvRows[i].indexOf(',');
                 if (firstCommaIndex === -1) continue;
 
                 const date = csvRows[i].substring(0, firstCommaIndex).replace(/"/g, "").trim();
                 let bColumn = csvRows[i].substring(firstCommaIndex + 1).trim();
                 
-                // B列が引用符で囲まれている場合を考慮してクリーンアップ
+                // B列が「無し」の場合はスキップ（表示しない）
+                if (bColumn.includes("無し") || bColumn === "") {
+                    continue;
+                }
+
                 if (bColumn.startsWith('"') && bColumn.endsWith('"')) {
                     bColumn = bColumn.substring(1, bColumn.length - 1);
                 }
                 
-                // カンマで選手データを分解
                 const lineData = bColumn.split(',').map(item => item.trim());
 
-                if (lineData.length >= 20) {
-                    // ホームチーム（インデックス1〜9）
+                // データ数が少なくても、少なくともホーム先発がいれば表示を試みるように修正
+                if (lineData.length >= 1) {
                     let homeLineup = "";
                     for (let j = 1; j <= 9; j++) {
-                        homeLineup += `<li class="lineup-item"><span class="order-num">${j}</span>${lineData[j]}</li>`;
+                        const player = lineData[j] || "";
+                        homeLineup += `<li class="lineup-item"><span class="order-num">${j}</span>${player}</li>`;
                     }
 
-                    // ビジターチーム（インデックス11〜19）
                     let awayLineup = "";
                     for (let j = 11; j <= 19; j++) {
-                        awayLineup += `<li class="lineup-item"><span class="order-num">${j-10}</span>${lineData[j]}</li>`;
+                        const player = lineData[j] || "";
+                        awayLineup += `<li class="lineup-item"><span class="order-num">${j-10}</span>${player}</li>`;
                     }
+
+                    const p1 = lineData[0] || '未定';
+                    const p2 = lineData[10] || '未定';
 
                     htmlContent += `
                         <div class="card">
@@ -87,12 +93,12 @@
                                 <div class="vs-center">VS</div>
                                 <div class="team-box">
                                     <div class="team-name">ホーム</div>
-                                    <div class="pitcher-info">先発:${lineData[0]}</div>
+                                    <div class="pitcher-info">先発:${p1}</div>
                                     <ul class="lineup-list">${homeLineup}</ul>
                                 </div>
                                 <div class="team-box" style="text-align: right;">
                                     <div class="team-name" style="text-align: right;">ビジター</div>
-                                    <div class="pitcher-info">先発:${lineData[10]}</div>
+                                    <div class="pitcher-info">先発:${p2}</div>
                                     <ul class="lineup-list">${awayLineup}</ul>
                                 </div>
                             </div>
