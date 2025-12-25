@@ -17,10 +17,7 @@
         .team-box { flex: 1; text-align: left; min-width: 0; }
         .team-name { font-weight: bold; border-bottom: 2px solid #eee; margin-bottom: 5px; padding-bottom: 3px; font-size: 0.8rem; color: #444; }
         
-        /* 先発投手のスタイル（黒色に変更） */
         .pitcher-info { font-size: 0.9rem; font-weight: bold; margin-bottom: 8px; color: #000; min-height: 1.2em; }
-        
-        /* VSのスタイル（赤色・中央配置） */
         .vs-center { position: absolute; left: 50%; top: 35px; transform: translateX(-50%); font-weight: bold; color: #ff0000; font-size: 0.8rem; z-index: 10; }
         
         .lineup-list { list-style: none; padding: 0; margin: 0; }
@@ -54,49 +51,55 @@
         try {
             const response = await fetch(url);
             const csvData = await response.text();
-            const rows = csvData.trim().split(/\r?\n/);
+            const csvRows = csvData.trim().split(/\r?\n/);
             let htmlContent = "";
 
-            for (let i = 1; i < rows.length; i++) {
-                const col = rows[i].split(',').map(c => c.replace(/"/g, "").trim());
-                if (col.length >= 1 && col[0] !== "") {
-                    
-                    let homeLineup = "";
-                    for (let j = 2; j <= 10; j++) {
-                        if (col[j]) homeLineup += `<li class="lineup-item"><span class="order-num">${j-1}</span>${col[j]}</li>`;
-                    }
+            for (let i = 1; i < csvRows.length; i++) {
+                // まずCSVとしてA列とB列に分ける
+                // CSVなので「B列の中のカンマ」が原因で崩れないよう正規表現で分割
+                const rowData = csvRows[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                
+                if (rowData && rowData.length >= 2) {
+                    const date = rowData[0].replace(/"/g, "").trim();
+                    // B列の中身をさらにカンマで分解
+                    const lineData = rowData[1].replace(/"/g, "").split(',').map(item => item.trim());
 
-                    let awayLineup = "";
-                    for (let j = 12; j <= 20; j++) {
-                        if (col[j]) awayLineup += `<li class="lineup-item"><span class="order-num">${j-11}</span>${col[j]}</li>`;
-                    }
+                    if (lineData.length >= 20) {
+                        // ホームチーム
+                        let homeLineup = "";
+                        for (let j = 1; j <= 9; j++) {
+                            homeLineup += `<li class="lineup-item"><span class="order-num">${j}</span>${lineData[j]}</li>`;
+                        }
 
-                    const p1 = col[1] || '未定';
-                    const p2 = col[11] || '未定';
+                        // ビジターチーム
+                        let awayLineup = "";
+                        for (let j = 11; j <= 19; j++) {
+                            awayLineup += `<li class="lineup-item"><span class="order-num">${j-10}</span>${lineData[j]}</li>`;
+                        }
 
-                    htmlContent += `
-                        <div class="card">
-                            <div class="date-label">${col[0]}</div>
-                            <div class="lineup-container">
-                                <div class="vs-center">VS</div>
-                                
-                                <div class="team-box">
-                                    <div class="team-name">ホーム</div>
-                                    <div class="pitcher-info">先発:${p1}</div>
-                                    <ul class="lineup-list">${homeLineup}</ul>
+                        htmlContent += `
+                            <div class="card">
+                                <div class="date-label">${date}</div>
+                                <div class="lineup-container">
+                                    <div class="vs-center">VS</div>
+                                    <div class="team-box">
+                                        <div class="team-name">ホーム</div>
+                                        <div class="pitcher-info">先発:${lineData[0]}</div>
+                                        <ul class="lineup-list">${homeLineup}</ul>
+                                    </div>
+                                    <div class="team-box" style="text-align: right;">
+                                        <div class="team-name" style="text-align: right;">ビジター</div>
+                                        <div class="pitcher-info">先発:${lineData[10]}</div>
+                                        <ul class="lineup-list">${awayLineup}</ul>
+                                    </div>
                                 </div>
-                                <div class="team-box" style="text-align: right;">
-                                    <div class="team-name" style="text-align: right;">ビジター</div>
-                                    <div class="pitcher-info">先発:${p2}</div>
-                                    <ul class="lineup-list">${awayLineup}</ul>
-                                </div>
-                            </div>
-                        </div>`;
+                            </div>`;
+                    }
                 }
             }
             document.getElementById('data-list').innerHTML = htmlContent || "データがありません。";
         } catch (e) {
-            document.getElementById('data-list').innerHTML = "読み込みエラーが発生しました。";
+            document.getElementById('data-list').innerHTML = "データの読み込みに失敗しました。";
         }
     }
 
