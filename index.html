@@ -1,62 +1,38 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>プロ野球データサイト</title>
-    <style>
-        body { font-family: sans-serif; margin: 0; background: #f0f0f0; }
-        .navbar { background: #222; display: flex; justify-content: center; padding: 10px; position: sticky; top: 0; }
-        .navbar button { background: none; border: none; color: white; padding: 10px 20px; cursor: pointer; }
-        .page-content { display: none; padding: 20px; text-align: center; }
-        .active { display: block; }
-        .card { background: white; padding: 15px; border-radius: 8px; margin: 10px auto; max-width: 400px; text-align: left; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    </style>
-</head>
-<body>
-
-<nav class="navbar">
-    <button onclick="showPage('home')">ホーム</button>
-    <button onclick="showPage('results')">試合結果</button>
-</nav>
-
-<div id="home" class="page-content active">
-    <h1>野球データサイトへようこそ</h1>
-    <p>スプレッドシートから自動でデータを読み込みます。</p>
-</div>
-
-<div id="results" class="page-content">
-    <h1>最新の試合結果</h1>
-    <div id="data-list"><p>読み込み中...</p></div>
-</div>
-
 <script>
-    // ページが開いた時に動く
     window.onload = loadBaseballData;
 
     async function loadBaseballData() {
-        // ★ここを自分のスプレッドシートのURL（CSV形式）に書き換える！
         const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRcPAYbDgrEgCq24g-rkfqk3b3c0v33RpyI-Fv0CaAnShvryaNOknS6l2TNxEec23u1rH1tJSeRD2hu/pub?output=csv";
         
         try {
             const response = await fetch(url);
             const csvData = await response.text();
-            const rows = csvData.split('\n');
+            
+            // 改行でバラバラにする際、余計な空白を消す処理を追加
+            const rows = csvData.trim().split('\n');
             let htmlContent = "";
 
+            // 1行目は見出しなので i = 1 から開始
             for (let i = 1; i < rows.length; i++) {
                 const columns = rows[i].split(',');
                 if (columns.length >= 2) {
                     htmlContent += `
                         <div class="card">
-                            <strong>日付：${columns[0]}</strong><br>
-                            内容：${columns[1]}
+                            <strong>日付：${columns[0].trim()}</strong><br>
+                            内容：${columns[1].trim()}
                         </div>`;
                 }
             }
-            document.getElementById('data-list').innerHTML = htmlContent;
+
+            if (htmlContent === "") {
+                document.getElementById('data-list').innerHTML = "表示できるデータがありませんでした。";
+            } else {
+                document.getElementById('data-list').innerHTML = htmlContent;
+            }
+
         } catch (e) {
-            document.getElementById('data-list').innerHTML = "エラー：読み込めませんでした。";
+            console.error(e);
+            document.getElementById('data-list').innerHTML = "エラー：読み込みに失敗しました。";
         }
     }
 
@@ -65,6 +41,3 @@
         document.getElementById(pageId).classList.add('active');
     }
 </script>
-
-</body>
-</html>
